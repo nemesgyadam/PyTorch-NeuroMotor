@@ -14,7 +14,7 @@ MAPPING = {7: "feet", 8: "left_hand", 9: "right_hand", 10: "tongue"}
 
 
 class MI_Dataset(Dataset):
-    def __init__(self, subject_id, runs, device= "cpu", config= "default", verbose= False):
+    def __init__(self, subject_id, runs, device="cpu", config="default", verbose=False):
         self.data_root = "data"
         self.subject_id = subject_id
         self.device = device
@@ -31,6 +31,9 @@ class MI_Dataset(Dataset):
         self.split_by_runs()
         self.format_data()
 
+        self.time_steps = self.X.shape[-1]
+        self.channels = self.X.shape[-2]
+        
         if verbose:
             print("#" * 50)
             print("Dataset created:")
@@ -58,9 +61,10 @@ class MI_Dataset(Dataset):
         )
         self.raw = mne.io.read_raw_gdf(subject_path, preload=True)
         self.filter_events()
-        eog_channels = [i for i, ch_name in enumerate(self.raw.ch_names) if 'EOG' in ch_name]
+        eog_channels = [
+            i for i, ch_name in enumerate(self.raw.ch_names) if "EOG" in ch_name
+        ]
         self.raw.drop_channels([self.raw.ch_names[ch_idx] for ch_idx in eog_channels])
-
 
     def filter_events(self):
         events, _ = mne.events_from_annotations(self.raw)
@@ -97,8 +101,6 @@ class MI_Dataset(Dataset):
 
     def split_by_runs(self):
         X = self.epochs.get_data()
-    
-
 
         if self.normalize:
             orig_shape = X.shape
@@ -111,13 +113,6 @@ class MI_Dataset(Dataset):
 
         X_by_runs = []
         y_by_runs = []
-
-        #Shuffle
-        np.random.seed(42)
-        idx = np.random.permutation(X.shape[0])
-        X = X[idx]
-        y = y[idx]
-
 
         for index in range(0, int(X.shape[0] // 48)):
             X_by_runs.append(X[index * 48 : (index + 1) * 48])
@@ -134,8 +129,9 @@ class MI_Dataset(Dataset):
         )
         self.y = self.runs_labels.reshape(-1)
 
+    
+
     def format_data(self):
-        # convert to torch tensor
         self.X = torch.from_numpy(self.X).float()
         self.y = torch.from_numpy(self.y).long()
 

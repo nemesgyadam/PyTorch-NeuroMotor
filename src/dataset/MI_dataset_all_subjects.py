@@ -15,11 +15,10 @@ MAPPING = {7: "feet", 8: "left_hand", 9: "right_hand", 10: "tongue"}
 
 
 class MI_Dataset(Dataset):
-    def __init__(self, subject_ids, device="cpu", config = 'default', verbose=False):
+    def __init__(self, subject_ids, device="cpu", config="default", verbose=False):
         self.data_root = "data"
         self.subject_ids = subject_ids
         self.device = device
-
 
         self.load_config(config)
 
@@ -30,6 +29,10 @@ class MI_Dataset(Dataset):
             print(self.epochs)
 
         self.format_data()
+
+        self.time_steps = self.X.shape[-1]
+        self.channels = self.X.shape[-2]
+
         if verbose:
             print("#" * 50)
             print("Dataset created:")
@@ -38,7 +41,7 @@ class MI_Dataset(Dataset):
             print("#" * 50)
 
     def load_config(self, file):
-        cfg = importlib.import_module(f'config.{file}').cfg
+        cfg = importlib.import_module(f"config.{file}").cfg
 
         self.target_freq = cfg["preprocessing"]["target_freq"]
         self.low_freq = cfg["preprocessing"]["low_freq"]
@@ -51,6 +54,7 @@ class MI_Dataset(Dataset):
 
         self.normalize = cfg["train"]["normalize"]
 
+
     def load_raw(self):
         self.subject_paths = [
             os.path.join(self.data_root, "A0" + str(subject_id) + "T.gdf")
@@ -61,7 +65,9 @@ class MI_Dataset(Dataset):
             for subject_path in self.subject_paths
         ]
         for raw in self.raws:
-            eog_channels = [i for i, ch_name in enumerate(raw.ch_names) if 'EOG' in ch_name]
+            eog_channels = [
+                i for i, ch_name in enumerate(raw.ch_names) if "EOG" in ch_name
+            ]
             raw.drop_channels([raw.ch_names[ch_idx] for ch_idx in eog_channels])
 
         self.filter_events()
@@ -104,6 +110,7 @@ class MI_Dataset(Dataset):
 
     def format_data(self):
         self.X = self.epochs.get_data()
+
         self.y = self.epochs.events[:, -1]
         self.y -= 1  # start at 0
 
@@ -114,9 +121,6 @@ class MI_Dataset(Dataset):
             self.X = scaler.fit_transform(self.X)
             self.X = self.X.reshape(orig_shape)
 
-
-
-        # convert to torch tensor
         self.X = torch.from_numpy(self.X).float()
         self.y = torch.from_numpy(self.y).long()
 
