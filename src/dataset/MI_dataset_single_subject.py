@@ -139,9 +139,7 @@ class MI_Dataset(Dataset):
         self.y = self.y.to(self.device)
 
     def __len__(self):
-
         return len(self.X)
 
     def __getitem__(self, idx):
-
         return self.X[idx], self.y[idx]

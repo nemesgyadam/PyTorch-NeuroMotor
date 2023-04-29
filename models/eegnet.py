@@ -3,10 +3,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class EEGNet(nn.Module):
-    def init(self, num_classes: int = 4, channels: int = 22, samples: int = 401,
+    def __init__(self, num_classes: int = 4, channels: int = 22, samples: int = 401,
         dropout_rate: float = 0.5, kernel_length: int = 64, num_filters1: int = 16,
         depth_multiplier: int = 2, num_filters2: int = 32, norm_rate: float = 0.25) -> None:
-        super(EEGNet, self).init()
+        super(EEGNet, self).__init__()
 
         self.channels = channels
         self.samples = samples
@@ -37,24 +37,24 @@ class EEGNet(nn.Module):
         self.flatten = nn.Flatten()
         self.dense = nn.Linear(num_filters2 * (samples // 32), num_classes)
 
-def forward(self, x: torch.Tensor) -> torch.Tensor:
-    x = x.view(-1,  1, self.channels, self.samples)
-    x = self.conv1(x)
-    x = self.bn1(x)
-    x = self.dw_conv1(x)
-    x = self.bn2(x)
-    x = self.activation(x)
-    x = self.avg_pool1(x)
-    x = self.dropout1(x)
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = x.view(-1,  1, self.channels, self.samples)
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.dw_conv1(x)
+        x = self.bn2(x)
+        x = self.activation(x)
+        x = self.avg_pool1(x)
+        x = self.dropout1(x)
 
-    x = self.sep_conv1(x)
-    x = self.conv2(x)
-    x = self.bn3(x)
-    x = self.activation(x)
-    x = self.avg_pool2(x)
-    x = self.dropout2(x)
+        x = self.sep_conv1(x)
+        x = self.conv2(x)
+        x = self.bn3(x)
+        x = self.activation(x)
+        x = self.avg_pool2(x)
+        x = self.dropout2(x)
 
-    x = self.flatten(x)
-    x = self.dense(x)
+        x = self.flatten(x)
+        x = self.dense(x)
 
-    return x
+        return x

@@ -33,7 +33,7 @@ def init_data(subject_id, test_run):
 
 
 def init_model(channels, samples):
-    model = EEGNet(channels = channels, samples= samples, nb_classes = 4)
+    model = EEGNet(channels = channels, samples= samples, num_classes = 4)
     model.to(device)
     return model
 

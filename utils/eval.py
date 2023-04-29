@@ -1,19 +1,16 @@
-import torch
-import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
-
+from torch import no_grad
+from sklearn.metrics import accuracy_score
 
 def accuracy(model, dataloader):
-    correct_predictions = 0
-    total_predictions = 0
+    all_labels = []
+    all_predictions = []
 
-    with torch.no_grad():
+    with no_grad():
         for features, labels in dataloader:
             outputs = model(features)
             _, predicted = torch.max(outputs.data, 1)
-            total_predictions += labels.size(0)
-            correct_predictions += (predicted == labels).sum().item()
+            
+            all_labels.extend(labels.cpu().numpy())
+            all_predictions.extend(predicted.cpu().numpy())
 
-    accuracy = correct_predictions / total_predictions
-
-    return accuracy * 100
+    return accuracy_score(all_labels, all_predictions) * 100
