@@ -2,6 +2,7 @@ import os
 import numpy as np
 import importlib
 import mne
+from typing import List, Tuple
 
 mne.set_log_level("error")
 
@@ -15,7 +16,13 @@ MAPPING = {7: "feet", 8: "left_hand", 9: "right_hand", 10: "tongue"}
 
 
 class MI_Dataset(Dataset):
-    def __init__(self, subject_ids, device="cpu", config="default", verbose=False):
+    def __init__(
+        self,
+        subject_ids: List[int],
+        device: str = "cpu",
+        config: str = "default",
+        verbose: bool = False,
+    ):
         self.data_root = "data"
         self.subject_ids = subject_ids
         self.device = device
@@ -25,8 +32,6 @@ class MI_Dataset(Dataset):
         self.load_raw()
         self.apply_preprocess()
         self.create_epochs()
-        if verbose:
-            print(self.epochs)
 
         self.format_data()
 
@@ -40,7 +45,7 @@ class MI_Dataset(Dataset):
             print(f"y --> {self.y.shape} ({self.y.dtype})")
             print("#" * 50)
 
-    def load_config(self, file):
+    def load_config(self, file: str) -> None:
         cfg = importlib.import_module(f"config.{file}").cfg
 
         self.target_freq = cfg["preprocessing"]["target_freq"]
@@ -54,8 +59,7 @@ class MI_Dataset(Dataset):
 
         self.normalize = cfg["train"]["normalize"]
 
-
-    def load_raw(self):
+    def load_raw(self) -> None:
         self.subject_paths = [
             os.path.join(self.data_root, "A0" + str(subject_id) + "T.gdf")
             for subject_id in self.subject_ids
@@ -72,7 +76,7 @@ class MI_Dataset(Dataset):
 
         self.filter_events()
 
-    def filter_events(self):
+    def filter_events(self) -> None:
         for raw in self.raws:
             events, _ = mne.events_from_annotations(raw)
             annot_from_events = mne.annotations_from_events(
@@ -80,7 +84,7 @@ class MI_Dataset(Dataset):
             )
             raw.set_annotations(annot_from_events)
 
-    def apply_preprocess(self):
+    def apply_preprocess(self) -> None:
         def preprocess_raw(session):
             session = session.resample(self.target_freq, npad="auto")
             if self.average_ref:
@@ -115,17 +119,19 @@ class MI_Dataset(Dataset):
         self.y -= 1  # start at 0
 
         if self.normalize:
-            orig_shape = self.X.shape
-            self.X = self.X.reshape(self.X.shape[0], -1)
-            scaler = StandardScaler()
-            self.X = scaler.fit_transform(self.X)
-            self.X = self.X.reshape(orig_shape)
-
+            self.do_normalize()
         self.X = torch.from_numpy(self.X).float()
         self.y = torch.from_numpy(self.y).long()
 
         self.X = self.X.to(self.device)
         self.y = self.y.to(self.device)
+
+    def do_normalize(self):
+        orig_shape = self.X.shape
+        self.X = self.X.reshape(self.X.shape[0], -1)
+        scaler = StandardScaler()
+        self.X = scaler.fit_transform(self.X)
+        self.X = self.X.reshape(orig_shape)
 
     def __len__(self):
         return len(self.X)

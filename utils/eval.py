@@ -1,9 +1,23 @@
+from typing import List
+import torch
 from torch import no_grad
+from torch.utils.data import DataLoader
 from sklearn.metrics import accuracy_score
 
-def accuracy(model, dataloader):
-    all_labels = []
-    all_predictions = []
+
+def accuracy(model: torch.nn.Module, dataloader: DataLoader) -> float:
+    """
+    Calculate the accuracy of a model on the given dataloader.
+    
+    Args:
+        model (torch.nn.Module): The model to evaluate.
+        dataloader (torch.utils.data.DataLoader): The dataloader containing the dataset to evaluate the model on.
+    
+    Returns:
+        float: The accuracy of the model on the dataset, expressed as a percentage.
+    """
+    all_labels: List[int] = []
+    all_predictions: List[int] = []
 
     with no_grad():
         for features, labels in dataloader:
