@@ -5,13 +5,13 @@
 [![Optuna](https://img.shields.io/badge/optuna-3.1.1-green.svg)](https://pypi.org/project/optuna/)
 [![torch-summary](https://img.shields.io/badge/torch_summary-1.4.5-orange.svg)](https://pypi.org/project/torch-summary/)
 [![scikit-learn](https://img.shields.io/badge/scikit_learn-1.2.2-red.svg)](https://pypi.org/project/scikit-learn/)
-# BCI Competition Graz 2b Motor Imagery Classification
+# BCI Competition Graz 2a Motor Imagery Classification
 
 This repository contains the implementation of a motor imagery classification model using the BCI Competition Graz Dataset 2a. The model is based on the EEGNet architecture and demonstrates the classification of four motor imagery classes. The dataset description can be found [here](resources/desc_2a.pdf).
 
 ## Dataset
 
-The BCI Competition Graz Dataset 2b consists of EEG recordings from subjects performing four different motor imagery tasks (left hand, right hand, both feet, and tongue). The dataset is divided into two sessions (runs) per subject, recorded on different days.
+The BCI Competition Graz Dataset 2a consists of EEG recordings from subjects performing four different motor imagery tasks (left hand, right hand, both feet, and tongue). The dataset is divided into two sessions (runs) per subject, recorded on different days.
 
 ---
 
