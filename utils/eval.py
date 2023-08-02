@@ -21,7 +21,10 @@ def accuracy(model: torch.nn.Module, dataloader: DataLoader) -> float:
 
     with no_grad():
         for features, labels in dataloader:
-            outputs = model(features)
+            if isinstance(features, list):
+                outputs = model(*features)
+            else:
+                outputs = model(features)
             _, predicted = torch.max(outputs.data, 1)
             
             all_labels.extend(labels.cpu().numpy())

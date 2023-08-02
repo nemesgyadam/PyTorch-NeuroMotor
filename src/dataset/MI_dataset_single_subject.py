@@ -21,6 +21,7 @@ class MI_Dataset(Dataset):
         runs: List[int],
         device: Union[str, torch.device] = "cpu",
         config: str = "default",
+        return_subject_id: bool = False,
         verbose: bool = False,
     ):
         """
@@ -37,6 +38,7 @@ class MI_Dataset(Dataset):
         self.subject_id = subject_id
         self.device = device
         self.runs = runs
+        self.return_subject_id = return_subject_id
 
         self.load_config(config)
 
@@ -160,4 +162,7 @@ class MI_Dataset(Dataset):
         return len(self.X)
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
-        return self.X[idx], self.y[idx]
+        if self.return_subject_id:
+            return ((self.X[idx], torch.tensor(self.subject_id-1, dtype=torch.int64)), self.y[idx])
+        else:
+         return (self.X[idx],  self.y[idx])
