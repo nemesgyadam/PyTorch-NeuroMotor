@@ -98,8 +98,8 @@ class ConditionedEEGNet(nn.Module):
 
         self.query = nn.Linear(self.eeg_dim, embed_dim, bias = False)    # TODO
         self.key = nn.Linear(ff_filter, embed_dim, bias = False)       
-        #self.value = nn.Linear(ff_filter, embed_dim, bias = False)
-        self.value = nn.Linear(self.eeg_dim, embed_dim, bias = False)
+        self.value = nn.Linear(ff_filter, embed_dim, bias = False)
+        #self.value = nn.Linear(self.eeg_dim, embed_dim, bias = False)
         self.fn1 = nn.Linear(embed_dim, num_filters3)
         self.act1 = nn.ELU()
         self.dropout = nn.Dropout(dropout_rate)
@@ -109,6 +109,24 @@ class ConditionedEEGNet(nn.Module):
 
         if init_std is not None:
             self.apply(self._init_weights)
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(
+            num_subjects=config['num_subjects'],
+            num_classes=config['n_classes'],
+            channels=config['in_chans'],
+            samples=config['n_samples'],
+            dropout_rate=config['dropout_rate'],
+            kernel_length=config['filter_time_length'],
+            ff_filter=config['n_filters_time'],
+            depth_multiplier=config['depth_multiplier'],
+            num_filters2=config['n_filters_spat'],
+            norm_rate=config['norm_rate'],
+            embed_dim=config['embedding_dim'],
+            num_filters3=config['n_filters3'],
+            init_std=config['weight_init_std']
+        )
 
 
     def forward(self, eeg_data: torch.Tensor, subject_id: torch.Tensor) -> torch.Tensor:
@@ -124,8 +142,8 @@ class ConditionedEEGNet(nn.Module):
 
         Q = self.query(eeg_features)
         K = self.key(subject_features)
-        #V = self.value(subject_features)
-        V = self.value(eeg_features)
+        V = self.value(subject_features)
+        #V = self.value(eeg_features)
 
         attn_matrix = Q @ K.transpose(-1, -2)
         normalized_attn_matrix =attn_matrix / self.embed_dim**0.5
