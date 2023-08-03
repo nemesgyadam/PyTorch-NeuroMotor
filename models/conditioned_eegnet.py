@@ -95,12 +95,14 @@ class ConditionedEEGNet(nn.Module):
         self.dropout = nn.Dropout(dropout_rate)
         self.fn2 = nn.Linear(num_filters3, num_classes)
 
+        self.eeg_fn = nn.Linear(384, embed_dim)
+
 
     def forward(self, eeg_data: torch.Tensor, subject_id: torch.Tensor) -> torch.Tensor:
         subject_features = self.subject_processor(subject_id)
         eeg_features = self.eeg_processor(eeg_data)
-        # print(f'subject_features: {subject_features.shape}')
-        # print(f'eeg_features: {eeg_features.shape}')
+        #print(f'subject_features: {subject_features.shape}')
+        #print(f'eeg_features: {eeg_features.shape}')
         #x = self.attention(subject_features, eeg_features, eeg_features)
         Q = self.query(eeg_features)
         K = self.key(subject_features)
@@ -112,7 +114,11 @@ class ConditionedEEGNet(nn.Module):
         softmaxed_attn_matrix = F.softmax(normalized_attn_matrix, dim=-1)
 
         x = softmaxed_attn_matrix @ V
-      
+        #print(f'x: {x.shape}')
+        # Residual path
+        eeg_features = self.eeg_fn(eeg_features)
+        x = x + eeg_features
+
         x = self.fn1(x)
         x = self.act1(x)
         x = self.dropout(x)
