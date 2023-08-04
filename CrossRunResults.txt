@@ -1,0 +1,31 @@
+(torch) C:\Code\AgyiJelek>python train_CrossRunValidation.py 1
+Mean accuracy: 62.85%
+Std accuracy: 12.11%
+
+(torch) C:\Code\AgyiJelek>python train_CrossRunValidation.py 2 
+Mean accuracy: 60.42%
+Std accuracy: 6.25%
+
+(torch) C:\Code\AgyiJelek>python train_CrossRunValidation.py 3
+Mean accuracy: 74.65%
+Std accuracy: 6.74%
+
+(torch) C:\Code\AgyiJelek>python train_CrossRunValidation.py 5
+Mean accuracy: 41.32%
+Std accuracy: 8.95%
+
+(torch) C:\Code\AgyiJelek>python train_CrossRunValidation.py 6
+Mean accuracy: 32.99%
+Std accuracy: 6.63%
+
+(torch) C:\Code\AgyiJelek>python train_CrossRunValidation.py 7
+Mean accuracy: 78.12%
+Std accuracy: 3.13%
+
+(torch) C:\Code\AgyiJelek>python train_CrossRunValidation.py 8
+Mean accuracy: 60.07%
+Std accuracy: 6.30%
+
+(torch) C:\Code\AgyiJelek>python train_CrossRunValidation.py 9
+Mean accuracy: 46.53%
+Std accuracy: 5.60%
