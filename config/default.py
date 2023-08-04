@@ -53,7 +53,7 @@ cfg = dict(
     train=dict(
         batch_size=64,
         normalize=True,
-        n_epochs=200,
+        n_epochs=100,
         learning_rate=1e-3,
         weight_decay=0.02,
     )

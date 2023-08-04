@@ -1,4 +1,5 @@
 import os
+import pickle
 import numpy as np
 import importlib
 import mne
@@ -8,7 +9,7 @@ mne.set_log_level("error")
 
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, ConcatDataset
 from sklearn.preprocessing import StandardScaler
 
 MAPPING = {7: "feet", 8: "left_hand", 9: "right_hand", 10: "tongue"}
@@ -49,6 +50,7 @@ class MI_Dataset(Dataset):
         self.extract_data()
         self.split_by_runs()
         self.format_data()
+        self.set_device(self.device)
 
         self.time_steps = self.X.shape[-1]
         self.channels = self.X.shape[-2]
@@ -155,6 +157,7 @@ class MI_Dataset(Dataset):
         self.X = torch.from_numpy(self.X).float()
         self.y = torch.from_numpy(self.y).long()
 
+    def set_device(self, device):
         self.X = self.X.to(self.device)
         self.y = self.y.to(self.device)
 
@@ -163,6 +166,36 @@ class MI_Dataset(Dataset):
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
         if self.return_subject_id:
-            return ((self.X[idx], torch.tensor(self.subject_id-1, dtype=torch.int64)), self.y[idx])
+            return ((self.X[idx], torch.tensor(self.subject_id-1, dtype=torch.int64, device = self.device)), self.y[idx])
         else:
          return (self.X[idx],  self.y[idx])
+
+    
+    def get_dataset(cfg, split='train', return_subject_id = False, device = None, verbose = False):
+        cache_root = 'cache'
+        if return_subject_id:
+            cache_type = 'all_subjects_with_id'
+        else:
+            cache_type = 'all_subjects'
+
+        
+        def create_dataset(cfg, split='train', return_subject_id = False, device=None, verbose=False):
+            return ConcatDataset([
+                MI_Dataset(subject, cfg['data'][f'{split}_runs'][subject], 
+                                        return_subject_id=return_subject_id, device=device, verbose=verbose) 
+                for subject in cfg['data']['subjects']
+            ])
+
+        path = os.path.join(cache_root, cache_type, f'{split}_dataset.pkl')
+        if os.path.isfile(path):
+            print(f'Loading dataset from {path}...')
+            dataset = pickle.load(open(path, 'rb'))
+        else:
+            print('Creating dataset...')
+            dataset = create_dataset(cfg, split=split, return_subject_id = return_subject_id, device=device, verbose=False)
+            for d in dataset.datasets:
+                d.set_device(device)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            print(f'Saving dataset to {path}...')
+            pickle.dump(dataset, open(path, 'wb'))
+        return dataset

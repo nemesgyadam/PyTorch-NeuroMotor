@@ -81,10 +81,11 @@ class FeedForward(nn.Module):
 class ConditionedEEGNet(nn.Module):
     def __init__(self, num_subjects: int = 1, num_classes: int = 4, channels: int = 22, samples: int = 401,
         dropout_rate: float = 0.5, kernel_length: int = 64, ff_filter: int = 16,
-        depth_multiplier: int = 2, num_filters2: int = 32, norm_rate: float = 0.25, embed_dim: int = 32, num_filters3: int = 128, init_std: Optional[float] = None) -> None:
+        depth_multiplier: int = 2, num_filters2: int = 32, norm_rate: float = 0.25, embed_dim: int = 32, num_filters3: int = 128, init_std: Optional[float] = None, device:str = 'cpu') -> None:
         super(ConditionedEEGNet, self).__init__()
         self.embed_dim = embed_dim
         self.init_std = init_std
+        self.device = device
 
         self.eeg_processor = EEGNet(num_classes=num_classes, channels=channels, samples=samples,
             dropout_rate=dropout_rate, kernel_length=kernel_length, ff_filter=ff_filter,
@@ -110,8 +111,10 @@ class ConditionedEEGNet(nn.Module):
         if init_std is not None:
             self.apply(self._init_weights)
 
+        self.to(self.device)
+
     @classmethod
-    def from_config(cls, config):
+    def from_config(cls, config, device ='cpu'):
         return cls(
             num_subjects=config['num_subjects'],
             num_classes=config['n_classes'],
@@ -125,7 +128,8 @@ class ConditionedEEGNet(nn.Module):
             norm_rate=config['norm_rate'],
             embed_dim=config['embedding_dim'],
             num_filters3=config['n_filters3'],
-            init_std=config['weight_init_std']
+            init_std=config['weight_init_std'],
+            device=device
         )
 
 
