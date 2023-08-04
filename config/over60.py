@@ -1,6 +1,7 @@
+# Contains subject over 60% (per subject) accuracy
 cfg = dict(
     data=dict(
-        subjects =      [1,2,3,4,5,6,7,8,9],
+        subjects =      [1,2,3,7,8],
         train_runs = {
                         1:[0, 1, 2, 3, 4],
                         2:[0, 1, 2, 3, 4],

@@ -171,14 +171,16 @@ class MI_Dataset(Dataset):
          return (self.X[idx],  self.y[idx])
 
     
-    def get_dataset(cfg, split='train', return_subject_id = False, device = None, verbose = False):
+    def get_concat_dataset(cfg, split='train', return_subject_id = False, device = None, verbose = False):
         cache_root = 'cache'
         if return_subject_id:
             cache_type = 'all_subjects_with_id'
         else:
             cache_type = 'all_subjects'
-
-        
+        if cfg['data']['subjects'] != list(range(1,10)):
+            subject_str =  "-".join(str(s) for s in cfg['data']['subjects'])
+            cache_type = cache_type  + '_' + subject_str
+            
         def create_dataset(cfg, split='train', return_subject_id = False, device=None, verbose=False):
             return ConcatDataset([
                 MI_Dataset(subject, cfg['data'][f'{split}_runs'][subject], 
