@@ -19,6 +19,7 @@ def accuracy(model: torch.nn.Module, dataloader: DataLoader) -> float:
     all_labels: List[int] = []
     all_predictions: List[int] = []
 
+    model.eval()
     with no_grad():
         for features, labels in dataloader:
             if isinstance(features, list):
@@ -29,5 +30,5 @@ def accuracy(model: torch.nn.Module, dataloader: DataLoader) -> float:
             
             all_labels.extend(labels.cpu().numpy())
             all_predictions.extend(predicted.cpu().numpy())
-
-    return accuracy_score(all_labels, all_predictions) * 100
+    model.train()
+    return accuracy_score(all_labels, all_predictions) * 100    

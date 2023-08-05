@@ -18,6 +18,8 @@ class EEGNet(nn.Module):
         depth_multiplier: int = 2,
         n_filters2: int = 32,
         dropout_rate: float = 0.5,
+
+        device: str = "cpu",
     ) -> None:
         super(EEGNet, self).__init__()
 
@@ -72,6 +74,8 @@ class EEGNet(nn.Module):
         self.flatten = nn.Flatten()
         if self.classify:
             self.dense = nn.Linear(n_filters2 * (time_steps // 32), n_classes)
+        
+        self.to(device)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = x.view(-1, 1, self.channels, self.time_steps)

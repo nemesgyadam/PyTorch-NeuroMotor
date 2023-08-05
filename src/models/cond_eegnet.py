@@ -21,6 +21,14 @@ class SubjectEncoder(nn.Module):
         return x
 
 class ConditionedBatchNorm(nn.Module):
+    '''
+    Conditional Batch Normalization: This technique is used frequently in generative models
+    but can also be useful in other types of neural networks. 
+    The idea is to include a batch normalization layer that is conditioned on the subject id. 
+    The subject id is again one-hot encoded (or embedded) and then used to calculate the mean and variance
+    for the normalization. This allows the model to learn different normalization parameters for each subject,
+    which can help it adapt to subject-specific characteristics.
+    '''
     def __init__(self, num_features, num_conditions):
         super().__init__()
         self.bn = nn.BatchNorm1d(num_features, affine=False)
@@ -48,7 +56,7 @@ class ConditionedEEGNet(nn.Module):
         n_filters2: int = 32,
         dropout_rate: float = 0.5,
         subject_filters: int = 16,
-        final_features: int = 10,
+        final_features: int = 4,
         device: str = "cpu",
     ) -> None:
 
@@ -85,9 +93,6 @@ class ConditionedEEGNet(nn.Module):
         # self.act1 = nn.ELU()
         self.dropout = nn.Dropout(dropout_rate)
         self.classifier = nn.Linear(final_features, n_classes)
-
-       
-
 
         self.to(self.device)
 
