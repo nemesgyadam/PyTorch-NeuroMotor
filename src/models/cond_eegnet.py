@@ -20,6 +20,19 @@ class SubjectEncoder(nn.Module):
         x = self.act(x)
         return x
 
+class ConditionedBatchNorm(nn.Module):
+    def __init__(self, num_features, num_conditions):
+        super().__init__()
+        self.bn = nn.BatchNorm1d(num_features, affine=False)
+        self.embed = nn.Embedding(num_conditions, 2*num_features)
+        self.embed.weight.data[:, :num_features].normal_(1, 0.02)  # Initialize scale at N(1, 0.02)
+        self.embed.weight.data[:, num_features:].zero_()  # Initialize bias at 0
+
+    def forward(self, x, y):
+        out = self.bn(x)
+        gamma, beta = self.embed(y).chunk(2, 1)
+        out = gamma * out + beta  # Affine transform
+        return out
 
 class ConditionedEEGNet(nn.Module):
     def __init__(
@@ -61,8 +74,8 @@ class ConditionedEEGNet(nn.Module):
         #self.subject_encoder = SubjectEncoder(n_subjects=n_subjects, n_filters=subject_filters)
         self.subject_encoder = nn.Embedding(n_subjects, subject_filters)
         ''' Initialize Conditioning '''
-        self.subject_norm = nn.LayerNorm(subject_filters)
-        self.eeg_norm = nn.LayerNorm(self.eeg_dim)
+        self.eeg_bn = ConditionedBatchNorm(self.eeg_dim, n_subjects)
+        self.subject_bn = ConditionedBatchNorm(subject_filters, n_subjects)
 
         self.linear = nn.Linear(subject_filters+self.eeg_dim, final_features)
         self.act = nn.ELU()
@@ -81,9 +94,11 @@ class ConditionedEEGNet(nn.Module):
     def forward(self, eeg_data: torch.Tensor, subject_id: torch.Tensor) -> torch.Tensor:
         ''' Encoders '''
         eeg_features = self.eeg_encoder(eeg_data)
+        eeg_features = self.eeg_bn(eeg_features, subject_id)
         #eeg_features = self.eeg_norm(eeg_features)
 
         subject_features = self.subject_encoder(subject_id)
+        subject_features = self.subject_bn(subject_features, subject_id)
         #subject_features = self.subject_norm(subject_features)
 
         
