@@ -66,7 +66,7 @@ def train(model, train_dataloader, val_dataloader, cfg, verbose=True):
             val_acc_history.append(val_accuracy)
             if verbose:
                 print(
-                    f"Epoch {epoch + 1}/{cfg['n_epochs']}, Loss: {epoch_loss}, Val Loss: {val_loss}, Train accuracy: {train_accuracy:.2f}%, Test accuracy: {val_accuracy:.2f}%"
+                    f"Epoch {epoch + 1}/{cfg['n_epochs']}, Loss: {epoch_loss:.5f}, Val Loss: {val_loss:.5f}, Train accuracy: {train_accuracy:.2f}%, Test accuracy: {val_accuracy:.2f}%"
                 )
 
     if verbose:

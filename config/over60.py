@@ -37,7 +37,7 @@ cfg = dict(
         tmax=5.9,
     ),
     model=dict(
-        num_subjects= 9,            # Number of subjects
+        num_subjects= 5,            # Number of subjects
         in_chans= 22,               # Number of input channels
         n_samples= 401,             # Number of samples
         n_classes= 4,               # Number of classes

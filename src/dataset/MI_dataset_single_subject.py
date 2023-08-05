@@ -18,10 +18,10 @@ MAPPING = {7: "feet", 8: "left_hand", 9: "right_hand", 10: "tongue"}
 class MI_Dataset(Dataset):
     def __init__(
         self,
+        cfg: dict,
         subject_id: int,
         runs: List[int],
         device: Union[str, torch.device] = "cpu",
-        config: str = "default",
         return_subject_id: bool = False,
         verbose: bool = False,
     ):
@@ -40,8 +40,8 @@ class MI_Dataset(Dataset):
         self.device = device
         self.runs = runs
         self.return_subject_id = return_subject_id
-
-        self.load_config(config)
+        self.cfg = cfg
+        self.parse_config()
 
         self.load_raw()
         self.apply_preprocess()
@@ -62,19 +62,19 @@ class MI_Dataset(Dataset):
             print(f"y --> {self.y.shape} ({self.y.dtype})")
             print("#" * 50)
 
-    def load_config(self, file: str) -> None:
-        cfg = importlib.import_module(f"config.{file}").cfg
+    def parse_config(self) -> None:
 
-        self.target_freq = cfg["preprocessing"]["target_freq"]
-        self.low_freq = cfg["preprocessing"]["low_freq"]
-        self.high_freq = cfg["preprocessing"]["high_freq"]
-        self.average_ref = cfg["preprocessing"]["average_ref"]
 
-        self.baseline = cfg["epochs"]["baseline"]
-        self.tmin = cfg["epochs"]["tmin"]
-        self.tmax = cfg["epochs"]["tmax"]
+        self.target_freq = self.cfg["preprocessing"]["target_freq"]
+        self.low_freq = self.cfg["preprocessing"]["low_freq"]
+        self.high_freq = self.cfg["preprocessing"]["high_freq"]
+        self.average_ref = self.cfg["preprocessing"]["average_ref"]
 
-        self.normalize = cfg["train"]["normalize"]
+        self.baseline = self.cfg["epochs"]["baseline"]
+        self.tmin = self.cfg["epochs"]["tmin"]
+        self.tmax = self.cfg["epochs"]["tmax"]
+
+        self.normalize = self.cfg["train"]["normalize"]
 
     def load_raw(self) -> None:
         subject_path = os.path.join(
@@ -166,7 +166,8 @@ class MI_Dataset(Dataset):
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
         if self.return_subject_id:
-            return ((self.X[idx], torch.tensor(self.subject_id-1, dtype=torch.int64, device = self.device)), self.y[idx])
+            subject_number = self.cfg['data']['subjects'].index(self.subject_id)
+            return ((self.X[idx], torch.tensor(subject_number, dtype=torch.int64, device = self.device)), self.y[idx])
         else:
          return (self.X[idx],  self.y[idx])
 
@@ -183,7 +184,7 @@ class MI_Dataset(Dataset):
             
         def create_dataset(cfg, split='train', return_subject_id = False, device=None, verbose=False):
             return ConcatDataset([
-                MI_Dataset(subject, cfg['data'][f'{split}_runs'][subject], 
+                MI_Dataset(cfg, subject,cfg['data'][f'{split}_runs'][subject], 
                                         return_subject_id=return_subject_id, device=device, verbose=verbose) 
                 for subject in cfg['data']['subjects']
             ])
