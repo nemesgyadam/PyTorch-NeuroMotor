@@ -5,20 +5,8 @@ import torch.nn.functional as F
 
 from typing import Optional
 from src.models.eegnet import EEGNet
-
-
-class SubjectEncoder(nn.Module):
-    def __init__(self, n_subjects: int = 1, n_filters: int = 16):
-        super(SubjectEncoder, self).__init__()
-        self.n_subjects = n_subjects
-        self.fn1 = nn.Linear(n_subjects, n_filters)
-        self.act = nn.ELU()
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = F.one_hot(x, num_classes=self.n_subjects).to(torch.float32)
-        x = self.fn1(x)
-        x = self.act(x)
-        return x
+from src.models.conditioned_batch_norm import ConditionedBatchNorm
+from src.models.subject_encoder import SubjectEncoder
 
 
 class ConditionedEEGNet(nn.Module):
@@ -39,6 +27,7 @@ class ConditionedEEGNet(nn.Module):
         v_from_subject: bool = True,
         residual: bool = False,
         weight_init_std: Optional[float] = None,
+        n_filters3: int = 10,
         device: str = "cpu",
     ) -> None:
 
@@ -63,12 +52,14 @@ class ConditionedEEGNet(nn.Module):
             dropout_rate=dropout_rate,
         )
         self.eeg_dim = self.eeg_encoder.calculate_output_dim()
-
-        self.subject_encoder = SubjectEncoder(n_subjects=n_subjects, n_filters=subject_filters)
-
-        ''' Initialize Attention '''
-        self.subject_norm = nn.LayerNorm(subject_filters)
+        self.eeg_bn = ConditionedBatchNorm(self.eeg_dim, n_subjects)
         self.eeg_norm = nn.LayerNorm(self.eeg_dim)
+
+        #self.subject_encoder = SubjectEncoder(n_subjects=n_subjects, n_filters=subject_filters)
+        self.subject_encoder = nn.Embedding(n_subjects, subject_filters)
+        self.subject_bn = ConditionedBatchNorm(subject_filters, n_subjects)
+        self.subject_norm = nn.LayerNorm(subject_filters)
+        ''' Initialize Attention '''
         self.attn_norm = nn.LayerNorm(embed_dim)
 
         self.query = nn.Linear(self.eeg_dim, embed_dim, bias=False)
@@ -84,10 +75,10 @@ class ConditionedEEGNet(nn.Module):
             self.eeg_scaler = nn.Linear(self.eeg_dim, embed_dim)
 
         ''' Initialize Classifier '''
-        # self.fn1 = nn.Linear(embed_dim, n_filters3)
-        # self.act1 = nn.ELU()
+        self.fn1 = nn.Linear(embed_dim, n_filters3)
+        self.act1 = nn.ELU()
         #self.dropout = nn.Dropout(dropout_rate)
-        self.classifier = nn.Linear(embed_dim, n_classes)
+        self.classifier = nn.Linear(n_filters3, n_classes)
 
        
 
@@ -98,11 +89,13 @@ class ConditionedEEGNet(nn.Module):
 
     def forward(self, eeg_data: torch.Tensor, subject_id: torch.Tensor) -> torch.Tensor:
         ''' Encoders '''
-        subject_features = self.subject_encoder(subject_id)
-        subject_features = self.subject_norm(subject_features)
-
         eeg_features = self.eeg_encoder(eeg_data)
-        eeg_features = self.eeg_norm(eeg_features)
+        #eeg_features = self.eeg_norm(eeg_features)
+        eeg_features = self.eeg_bn(eeg_features, subject_id)
+
+        subject_features = self.subject_encoder(subject_id)
+        #subject_features = self.subject_norm(subject_features)
+        subject_features = self.subject_bn(subject_features, subject_id)
 
         # print(f'subject_features: {subject_features.shape}')
         # print(f'eeg_features: {eeg_features.shape}')
@@ -127,9 +120,9 @@ class ConditionedEEGNet(nn.Module):
             x = x + eeg_features
 
         ''' Classify '''
-        # x = self.fn1(x)
-        # x = self.act1(x)
-        x = self.dropout(x)
+        x = self.fn1(x)
+        x = self.act1(x)
+        #x = self.dropout(x)
         x = self.classifier(x)
         return x
 

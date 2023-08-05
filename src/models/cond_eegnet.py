@@ -5,42 +5,10 @@ import torch.nn.functional as F
 
 from typing import Optional
 from src.models.eegnet import EEGNet
+from src.models.conditioned_batch_norm import ConditionedBatchNorm
+from src.models.subject_encoder import SubjectEncoder
 
 
-class SubjectEncoder(nn.Module):
-    def __init__(self, n_subjects: int = 1, n_filters: int = 16):
-        super(SubjectEncoder, self).__init__()
-        self.n_subjects = n_subjects
-        self.fn1 = nn.Linear(n_subjects, n_filters)
-        self.act = nn.ELU()
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = F.one_hot(x, num_classes=self.n_subjects).to(torch.float32)
-        x = self.fn1(x)
-        x = self.act(x)
-        return x
-
-class ConditionedBatchNorm(nn.Module):
-    '''
-    Conditional Batch Normalization: This technique is used frequently in generative models
-    but can also be useful in other types of neural networks. 
-    The idea is to include a batch normalization layer that is conditioned on the subject id. 
-    The subject id is again one-hot encoded (or embedded) and then used to calculate the mean and variance
-    for the normalization. This allows the model to learn different normalization parameters for each subject,
-    which can help it adapt to subject-specific characteristics.
-    '''
-    def __init__(self, num_features, num_conditions):
-        super().__init__()
-        self.bn = nn.BatchNorm1d(num_features, affine=False)
-        self.embed = nn.Embedding(num_conditions, 2*num_features)
-        self.embed.weight.data[:, :num_features].normal_(1, 0.02)  # Initialize scale at N(1, 0.02)
-        self.embed.weight.data[:, num_features:].zero_()  # Initialize bias at 0
-
-    def forward(self, x, y):
-        out = self.bn(x)
-        gamma, beta = self.embed(y).chunk(2, 1)
-        out = gamma * out + beta  # Affine transform
-        return out
 
 class ConditionedEEGNet(nn.Module):
     def __init__(

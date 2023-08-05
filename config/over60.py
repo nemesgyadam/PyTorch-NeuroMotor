@@ -47,7 +47,7 @@ cfg = dict(
         kernel_length = 64,
         n_filters1 = 16,
         depth_multiplier = 2,
-        num_filters2 = 32,
+        n_filters2 = 32,
         dropout_rate= 0.5,
 
         # Subject Encoder params
@@ -58,7 +58,8 @@ cfg = dict(
         embed_dim = 8,
         v_from_subject = True,      # Calculate value vector from subject encoder of eeg encoder
         residual = False,           # Add residual path to the model
-        weight_init_std= 0.2        # Standard deviation for weight initialization
+        weight_init_std= 0.2,        # Standard deviation for weight initialization
+        n_filters3 = 10
         ),
     train=dict(
         batch_size=64,
