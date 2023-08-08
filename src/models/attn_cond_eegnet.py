@@ -22,20 +22,17 @@ class ConditionedEEGNet(nn.Module):
         depth_multiplier: int = 2,
         n_filters2: int = 32,
         dropout_rate: float = 0.5,
-        subject_filters: int = 16,
-        embed_dim: int = 8,
-        v_from_subject: bool = True,
-        residual: bool = False,
+        embed_dim: int = 16,
         weight_init_std: Optional[float] = None,
-        n_filters3: int = 10,
+
         device: str = "cpu",
     ) -> None:
 
         super(ConditionedEEGNet, self).__init__()
         self.embed_dim = embed_dim
         self.device = device
-        self.v_from_subject = v_from_subject
-        self.residual = residual
+
+     
         self.weight_init_std = weight_init_std
 
 
@@ -54,31 +51,21 @@ class ConditionedEEGNet(nn.Module):
         self.eeg_dim = self.eeg_encoder.calculate_output_dim()
         self.eeg_bn = ConditionedBatchNorm(self.eeg_dim, n_subjects)
         self.eeg_norm = nn.LayerNorm(self.eeg_dim)
+        self.eeg_dim_reduction = nn.Linear(self.eeg_dim, self.embed_dim)
 
-        #self.subject_encoder = SubjectEncoder(n_subjects=n_subjects, n_filters=subject_filters)
-        self.subject_encoder = nn.Embedding(n_subjects, subject_filters)
-        self.subject_bn = ConditionedBatchNorm(subject_filters, n_subjects)
-        self.subject_norm = nn.LayerNorm(subject_filters)
-        ''' Initialize Attention '''
-        self.attn_norm = nn.LayerNorm(embed_dim)
+        self.subject_encoder = SubjectEncoder(n_subjects=n_subjects, n_filters=self.embed_dim)
+        #self.subject_encoder = nn.Embedding(n_subjects, self.embed_dim)
+        self.subject_bn = ConditionedBatchNorm(self.embed_dim, n_subjects)
+        self.subject_norm = nn.LayerNorm(self.embed_dim)
 
-        self.query = nn.Linear(self.eeg_dim, embed_dim, bias=False)
-        self.key = nn.Linear(subject_filters, embed_dim, bias=False)
-        if self.v_from_subject:
-            self.value = nn.Linear(subject_filters, embed_dim, bias=False)
-        else:
-            self.value = nn.Linear(self.eeg_dim, embed_dim, bias = False)
-
-        ''' Initialize Residual Path '''
-        # Change the dim of EEG features in order to enable residual path 
-        if self.residual:
-            self.eeg_scaler = nn.Linear(self.eeg_dim, embed_dim)
+    
+        self.act1 = nn.ELU()
+    
 
         ''' Initialize Classifier '''
-        self.fn1 = nn.Linear(embed_dim, n_filters3)
-        self.act1 = nn.ELU()
-        #self.dropout = nn.Dropout(dropout_rate)
-        self.classifier = nn.Linear(n_filters3, n_classes)
+  
+        self.dropout = nn.Dropout(dropout_rate)
+        self.classifier = nn.Linear(self.embed_dim, n_classes)
 
        
 
@@ -92,37 +79,23 @@ class ConditionedEEGNet(nn.Module):
         eeg_features = self.eeg_encoder(eeg_data)
         #eeg_features = self.eeg_norm(eeg_features)
         eeg_features = self.eeg_bn(eeg_features, subject_id)
+        eeg_features = self.eeg_dim_reduction(eeg_features)
 
         subject_features = self.subject_encoder(subject_id)
         #subject_features = self.subject_norm(subject_features)
         subject_features = self.subject_bn(subject_features, subject_id)
 
-        # print(f'subject_features: {subject_features.shape}')
-        # print(f'eeg_features: {eeg_features.shape}')
+        #print(f'subject_features: {subject_features.shape}')
+        #print(f'eeg_features: {eeg_features.shape}')
 
         ''' Attention '''
-        Q = self.query(eeg_features)
-        K = self.key(subject_features)
-        if self.v_from_subject:
-            V = self.value(subject_features)
-        else:
-            V = self.value(eeg_features)
-
-        attn_matrix = Q @ K.transpose(-1, -2)
-        normalized_attn_matrix = attn_matrix / self.embed_dim**0.5
-        softmaxed_attn_matrix = F.softmax(normalized_attn_matrix, dim=-1)
-        x = softmaxed_attn_matrix @ V
-        x = self.attn_norm(x)
-
-        ''' Residual path '''
-        if self.residual:
-            eeg_features = self.eeg_fn(eeg_features)
-            x = x + eeg_features
+        subject_features = nn.functional.sigmoid(subject_features)
+        x = torch.mul(subject_features, eeg_features)
+        x = self.act1(x)
+      
 
         ''' Classify '''
-        x = self.fn1(x)
-        x = self.act1(x)
-        #x = self.dropout(x)
+        x = self.dropout(x)
         x = self.classifier(x)
         return x
 

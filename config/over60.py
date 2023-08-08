@@ -48,18 +48,13 @@ cfg = dict(
         n_filters1 = 16,
         depth_multiplier = 2,
         n_filters2 = 32,
-        dropout_rate= 0.5,
-
-        # Subject Encoder params
-        subject_filters = 16,
+        dropout_rate= 0.2,
 
 
         # Conditioned EEGNet params
-        embed_dim = 8,
-        v_from_subject = True,      # Calculate value vector from subject encoder of eeg encoder
-        residual = False,           # Add residual path to the model
-        weight_init_std= 0.2,        # Standard deviation for weight initialization
-        n_filters3 = 10
+        embed_dim = 16,
+        weight_init_std= None        # Standard deviation for weight initialization
+
         ),
     train=dict(
         batch_size=64,
