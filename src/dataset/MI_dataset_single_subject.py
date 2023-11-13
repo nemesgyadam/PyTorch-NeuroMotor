@@ -94,7 +94,8 @@ class MI_Dataset(Dataset):
         self.raw.set_annotations(annot_from_events)
 
     def apply_preprocess(self) -> None:
-        self.raw = self.raw.resample(self.target_freq, npad="auto")
+        if self.target_freq:
+            self.raw = self.raw.resample(self.target_freq, npad="auto")
         if self.average_ref:
             self.raw = self.raw.set_eeg_reference("average", projection=True)
 
