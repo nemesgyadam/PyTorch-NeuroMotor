@@ -17,7 +17,7 @@ class ConditionedEEGNet(nn.Module):
         n_classes: int = 4,
         n_subjects: int = 1,
         channels: int = 22,
-        time_steps: int = 401,
+        n_samples: int = 401,
         kernel_length: int = 64,
         n_filters1: int = 16,
         depth_multiplier: int = 2,
@@ -37,7 +37,7 @@ class ConditionedEEGNet(nn.Module):
             classify=False,                     # Remove head
             n_classes=n_classes,
             channels=channels,
-            time_steps=time_steps,
+            n_samples=n_samples,
             kernel_length=kernel_length,
             n_filters1=n_filters1,
             depth_multiplier=depth_multiplier,

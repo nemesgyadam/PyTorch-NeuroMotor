@@ -10,7 +10,7 @@ class EEGNet(nn.Module):
         classify: bool = True,
         n_classes: int = 4,
         channels: int = 22,
-        time_steps: int = 401,
+        n_samples: int = 401,
 
        
         kernel_length: int = 64,
@@ -24,7 +24,7 @@ class EEGNet(nn.Module):
         super(EEGNet, self).__init__()
 
         self.channels = channels
-        self.time_steps = time_steps
+        self.n_samples = n_samples
         self.classify = classify
 
         # First convolutional block
@@ -73,12 +73,12 @@ class EEGNet(nn.Module):
         # Fully connected layer
         self.flatten = nn.Flatten()
         if self.classify:
-            self.dense = nn.Linear(n_filters2 * (time_steps // 32), n_classes)
+            self.dense = nn.Linear(n_filters2 * (n_samples // 32), n_classes)
         
         self.to(device)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = x.view(-1, 1, self.channels, self.time_steps)
+        x = x.view(-1, 1, self.channels, self.n_samples)
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.dw_conv1(x)
@@ -101,7 +101,7 @@ class EEGNet(nn.Module):
         return x
 
     def calculate_output_dim(self) -> int:
-        x = torch.randn(1, 1, self.channels, self.time_steps)
+        x = torch.randn(1, 1, self.channels, self.n_samples)
         x = self(x)
         return x.shape[-1]
 

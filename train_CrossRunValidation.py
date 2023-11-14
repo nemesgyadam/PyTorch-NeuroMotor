@@ -43,7 +43,7 @@ def train(subject_id: int, val_run: int) -> float:
     train_dataloader, test_dataloader = init_data(subject_id, val_run)
 
     model = init_model(
-        train_dataloader.dataset.channels, train_dataloader.dataset.time_steps
+        train_dataloader.dataset.channels, train_dataloader.dataset.n_samples
     )
 
     criterion = nn.CrossEntropyLoss()
