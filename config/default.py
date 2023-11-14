@@ -36,7 +36,7 @@ cfg = dict(
         tmax=5.9,
     ),
     model=dict(
-        num_subjects= 9,            # Number of subjects
+        n_subjects= 9,            # Number of subjects
         in_chans= 22,               # Number of input channels
         n_samples= 401,             # Number of samples
         n_classes= 4,               # Number of classes
@@ -46,7 +46,7 @@ cfg = dict(
         n_filters_spat = 25,        # Number of filters in the spatial convolution
         dropout_rate= 0.5,          # Dropout rate
         depth_multiplier= 2,        # Depth multiplier for depthwise convolution
-        embedding_dim= 8,           # Dimension of the embedding for the attention mechanism
+        embedding_dim= 9,           # Dimension of the embedding for the attention mechanism
         n_filters3= 64,             # Number of filters in the final convolution layer
         weight_init_std= 0.2        # Standard deviation for weight initialization
         ),

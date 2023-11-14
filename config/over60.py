@@ -37,30 +37,25 @@ cfg = dict(
         tmax=5.9,
     ),
     model=dict(
-        # General params
-        n_classes= 4,               # Number of classes
-        n_subjects= 5,            # Number of subjects
+        n_subjects= 5,              # Number of subjects
         in_chans= 22,               # Number of input channels
         n_samples= 401,             # Number of samples
-
-        # EEGNet params
-        kernel_length = 64,
-        n_filters1 = 16,
-        depth_multiplier = 2,
-        n_filters2 = 32,
-        dropout_rate= 0.2,
-
-
-        # Conditioned EEGNet params
-        embed_dim = 16,
-        weight_init_std= None        # Standard deviation for weight initialization
-
+        n_classes= 4,               # Number of classes
+        n_filters_time= 16,         # Number of filters in the temporal convolution
+        norm_rate = 0.25,           # Normalization rate
+        filter_time_length= 10,     # Length of the temporal convolution filters
+        n_filters_spat = 32,        # Number of filters in the spatial convolution
+        dropout_rate= 0.2,          # Dropout rate
+        depth_multiplier= 2,        # Depth multiplier for depthwise convolution
+        embedding_dim= 16,           # Dimension of the embedding for the attention mechanism
+        n_filters3= 64,             # Number of filters in the final convolution layer
+        weight_init_std= None       # Standard deviation for weight initialization
         ),
     train=dict(
         batch_size=64,
         normalize=True,
         n_epochs=100,
-        learning_rate=1e-3,
+        learning_rate=5e-3,
         weight_decay=0.02,
     )
 
