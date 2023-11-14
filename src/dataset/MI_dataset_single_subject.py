@@ -115,8 +115,10 @@ class MI_Dataset(Dataset):
             baseline=self.baseline,
             preload=True,
         )
-
-        self.epochs = self.epochs.crop(tmin=self.baseline[-1], tmax=self.tmax)
+        tmin = self.tmin
+        if self.baseline:
+            tmin = self.baseline[-1]
+        self.epochs = self.epochs.crop(tmin=tmin, tmax=self.tmax)
 
         del self.raw
 

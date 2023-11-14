@@ -13,7 +13,7 @@ from src.models.subject_encoder import SubjectEncoder
 class ConditionedEEGNet(nn.Module):
     def __init__(
         self,
-        subject_features: dict = {},
+        subject_averages: dict = {},
         subjects:list = [],
         classify: bool = True,
         n_classes: int = 4,
@@ -37,7 +37,7 @@ class ConditionedEEGNet(nn.Module):
         self.subjects = subjects
      
         self.weight_init_std = weight_init_std
-        self.subject_features = subject_features
+        self.subject_averages = subject_averages
 
         ''' Initiate Encoders '''
         self.eeg_encoder = EEGNet(
@@ -56,8 +56,18 @@ class ConditionedEEGNet(nn.Module):
         self.eeg_norm = nn.LayerNorm(self.eeg_dim)
         self.eeg_dim_reduction = nn.Linear(self.eeg_dim, self.embed_dim)
 
-        self.subject_dim = 12
-        self.subject_encoder =  nn.Linear(12, self.subject_dim)
+        self.subject_encoder =  EEGNet(
+                        classify=False,                     # Remove head
+                        n_classes=n_classes,
+                        channels=channels,
+                        n_samples=n_samples,
+                        kernel_length=kernel_length,
+                        n_filters1=2,
+                        depth_multiplier=depth_multiplier,
+                        n_filters2=2,
+                        dropout_rate=dropout_rate,
+                    )
+        self.subject_dim = self.subject_encoder.calculate_output_dim()
 
         self.subject_bn = ConditionedBatchNorm(self.subject_dim, n_subjects)
         self.subject_norm = nn.LayerNorm(self.subject_dim)
@@ -91,14 +101,14 @@ class ConditionedEEGNet(nn.Module):
 
         # Subject Encoder
         ###########   ID2AVG  ################
-        subject_features = []
+        subject_averages = []
         for subject_number in subject_numbers:
             subject_id = self.subjects[subject_number.item()] 
-            subject_features.append(torch.from_numpy(self.subject_features[subject_id]))
-        subject_feature = torch.stack(subject_features)
-        subject_feature = subject_feature.to(self.device).float()
+            subject_averages.append(torch.from_numpy(self.subject_averages[subject_id]))
+        subject_average = torch.stack(subject_averages)
+        subject_average = subject_average.to(self.device)
         ######################################
-        subject_features = self.subject_encoder(subject_feature)
+        subject_features = self.subject_encoder(subject_average)
         #subject_features = self.subject_norm(subject_features)
         subject_features = self.subject_bn(subject_features, subject_numbers)
         subject_features = self.subject_dim_reduction(subject_features)
@@ -125,7 +135,7 @@ class ConditionedEEGNet(nn.Module):
 
 
     @classmethod
-    def from_config(cls, config, subject_features, subjects, device="cpu"):
+    def from_config(cls, config, subject_averages, subjects, device="cpu"):
         # Get the signature of the class constructor
         signature = inspect.signature(cls.__init__)
 
@@ -137,7 +147,7 @@ class ConditionedEEGNet(nn.Module):
         kwargs = {name: config[name] for name in parameters.keys() if name in config}
         kwargs["device"] = device
         kwargs["subjects"] = subjects
-        kwargs["subject_features"] = subject_features
+        kwargs["subject_averages"] = subject_averages
         
   
        
