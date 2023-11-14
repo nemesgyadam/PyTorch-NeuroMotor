@@ -36,6 +36,7 @@ cfg = dict(
         tmin=-0.1,
         tmax=5.9,
     ),
+    # TODO ensure paramater names
     model=dict(
         n_subjects= 5,              # Number of subjects
         in_chans= 22,               # Number of input channels

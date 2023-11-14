@@ -56,8 +56,8 @@ class ConditionedEEGNet(nn.Module):
         self.eeg_norm = nn.LayerNorm(self.eeg_dim)
         self.eeg_dim_reduction = nn.Linear(self.eeg_dim, self.embed_dim)
 
-        self.subject_dim = 12
-        self.subject_encoder =  nn.Linear(12, self.subject_dim)
+        self.subject_dim = 12       # TODO: make this a parameter
+        self.subject_encoder =  nn.Linear(12, self.subject_dim)  # 12 is the number of features in the subject_features dict
 
         self.subject_bn = ConditionedBatchNorm(self.subject_dim, n_subjects)
         self.subject_norm = nn.LayerNorm(self.subject_dim)

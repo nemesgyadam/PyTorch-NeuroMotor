@@ -95,8 +95,8 @@ class ConditionedEEGNet(nn.Module):
         ''' Encoders '''
         # EEG Encoder
         eeg_features = self.eeg_encoder(eeg_data)
-        #eeg_features = self.eeg_norm(eeg_features)
-        eeg_features = self.eeg_bn(eeg_features, subject_numbers)
+        eeg_features = self.eeg_norm(eeg_features)
+        #eeg_features = self.eeg_bn(eeg_features, subject_numbers)
         eeg_features = self.eeg_dim_reduction(eeg_features)
 
         # Subject Encoder
@@ -109,8 +109,8 @@ class ConditionedEEGNet(nn.Module):
         subject_average = subject_average.to(self.device)
         ######################################
         subject_features = self.subject_encoder(subject_average)
-        #subject_features = self.subject_norm(subject_features)
-        subject_features = self.subject_bn(subject_features, subject_numbers)
+        subject_features = self.subject_norm(subject_features)
+        #subject_features = self.subject_bn(subject_features, subject_numbers)
         subject_features = self.subject_dim_reduction(subject_features)
 
         #print(f'subject_features: {subject_features.shape}')  # [64, 16] / [B, embed_dim]
