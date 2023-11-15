@@ -22,3 +22,4 @@ torchaudio         == 2.0.1+cu118
 torchmetrics       == 0.11.4
 torchvision        == 0.15.1+cpu
 tqdm               == 4.65.0
+optuna             == 3.4.0

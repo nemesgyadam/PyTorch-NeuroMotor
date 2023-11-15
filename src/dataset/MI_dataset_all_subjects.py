@@ -57,7 +57,7 @@ class MI_Dataset(Dataset):
         self.tmin = cfg["epochs"]["tmin"]
         self.tmax = cfg["epochs"]["tmax"]
 
-        self.normalize = cfg["train"]["normalize"]
+        self.normalize = cfg["preprocessing"]["normalize"]
 
     def load_raw(self) -> None:
         self.subject_paths = [

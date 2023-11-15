@@ -72,7 +72,7 @@ class MI_Dataset(Dataset):
         self.tmin = self.cfg["epochs"]["tmin"]
         self.tmax = self.cfg["epochs"]["tmax"]
 
-        self.normalize = self.cfg["train"]["normalize"]
+        self.normalize = self.cfg["preprocessing"]["normalize"]
 
     def load_raw(self) -> None:
         subject_path = os.path.join(

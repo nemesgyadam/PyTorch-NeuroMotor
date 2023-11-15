@@ -15,7 +15,7 @@ class EEGNet(nn.Module):
         in_timesteps: int = 401,
         n_time_filters: int = 16,
         time_filter_length: int = 64,
-        n_depth_filters: int = 32,
+        depth_multiplier: int = 2,
         n_sep_filters: int = 32,
         dropout_rate: float = 0.5,
         weight_init_std: Optional[float] = None,
@@ -26,6 +26,8 @@ class EEGNet(nn.Module):
         self.in_channels = in_channels
         self.in_timesteps = in_timesteps
         self.classify = classify
+
+        n_depth_filters = n_time_filters * depth_multiplier
 
         self.weight_init_std = weight_init_std
 
