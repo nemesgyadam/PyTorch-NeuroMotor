@@ -35,8 +35,8 @@ class MI_Dataset(Dataset):
 
         self.format_data()
 
-        self.n_samples = self.X.shape[-1]
-        self.channels = self.X.shape[-2]
+        self.in_timesteps = self.X.shape[-1]
+        self.in_channels = self.X.shape[-2]
 
         if verbose:
             print("#" * 50)

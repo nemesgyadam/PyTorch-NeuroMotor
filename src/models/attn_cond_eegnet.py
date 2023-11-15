@@ -5,25 +5,26 @@ import torch.nn.functional as F
 
 from typing import Optional
 from src.models.eegnet import EEGNet
-from src.models.conditioned_batch_norm import ConditionedBatchNorm
-from src.models.subject_encoder import SubjectEncoder
+from src.models.utils.conditioned_batch_norm import ConditionedBatchNorm
+from src.models.utils.subject_encoder import SubjectEncoder
 
 
 class ConditionedEEGNet(nn.Module):
     def __init__(
         self,
-        classify: bool = True,
-        n_classes: int = 4,
+        # EEGEncoder params
         n_subjects: int = 1,
-        channels: int = 22,
-        n_samples: int = 401,
-        kernel_length: int = 64,
-        n_filters1: int = 16,
-        depth_multiplier: int = 2,
-        n_filters2: int = 32,
+        n_classes: int = 4,
+        in_channels: int = 22,
+        in_timesteps: int = 401,
+        n_time_filters: int = 16,
+        time_filter_length: int = 64,
+        n_depth_filters: int = 32,
+        n_sep_filters: int = 32,
         dropout_rate: float = 0.5,
-        embed_dim: int = 16,
         weight_init_std: Optional[float] = None,
+        # Conditioning params
+        embed_dim: int = 16,
 
         device: str = "cpu",
     ) -> None:
@@ -31,43 +32,38 @@ class ConditionedEEGNet(nn.Module):
         super(ConditionedEEGNet, self).__init__()
         self.embed_dim = embed_dim
         self.device = device
-
-     
         self.weight_init_std = weight_init_std
 
-
-        ''' Initiate Encoders '''
+        ''' EEG Encoder '''
         self.eeg_encoder = EEGNet(
             classify=False,                     # Remove head
             n_classes=n_classes,
-            channels=channels,
-            n_samples=n_samples,
-            kernel_length=kernel_length,
-            n_filters1=n_filters1,
-            depth_multiplier=depth_multiplier,
-            n_filters2=n_filters2,
+            in_channels=in_channels,
+            in_timesteps=in_timesteps,
+            n_time_filters=n_time_filters,
+            time_filter_length=time_filter_length,
+            n_depth_filters=n_depth_filters,
+            n_sep_filters=n_sep_filters,
             dropout_rate=dropout_rate,
+            weight_init_std=weight_init_std,
+
         )
         self.eeg_dim = self.eeg_encoder.calculate_output_dim()
         self.eeg_bn = ConditionedBatchNorm(self.eeg_dim, n_subjects)
         self.eeg_norm = nn.LayerNorm(self.eeg_dim)
         self.eeg_dim_reduction = nn.Linear(self.eeg_dim, self.embed_dim)
-
+       
+        ''' Subject Encoder '''
         self.subject_encoder = SubjectEncoder(n_subjects=n_subjects, n_filters=self.embed_dim)
         #self.subject_encoder = nn.Embedding(n_subjects, self.embed_dim)
         self.subject_bn = ConditionedBatchNorm(self.embed_dim, n_subjects)
         self.subject_norm = nn.LayerNorm(self.embed_dim)
-
-    
         self.act1 = nn.ELU()
     
 
         ''' Initialize Classifier '''
-  
         self.dropout = nn.Dropout(dropout_rate)
         self.classifier = nn.Linear(self.embed_dim, n_classes)
-
-       
 
         if weight_init_std is not None:
             self.apply(self._init_weights)
@@ -86,10 +82,7 @@ class ConditionedEEGNet(nn.Module):
         subject_features = self.subject_bn(subject_features, subject_id)
         
 
-        #print(f'subject_features: {subject_features.shape}')
-        #print(f'eeg_features: {eeg_features.shape}')
-
-        ''' Attention '''
+        ''' Conditioning '''
         subject_features = nn.functional.sigmoid(subject_features)
         x = torch.mul(subject_features, eeg_features)
         x = self.act1(x)

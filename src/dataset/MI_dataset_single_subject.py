@@ -12,7 +12,7 @@ import torch.nn as nn
 from torch.utils.data import Dataset, ConcatDataset
 from sklearn.preprocessing import StandardScaler
 
-MAPPING = {7: "feet", 8: "left_hand", 9: "right_hand", 10: "tongue"}
+MAPPING = {7: "feet", 8: "left_hand", 9: "right_hand", 10: "tongue"}  #Competion 2a specific
 
 
 class MI_Dataset(Dataset):
@@ -22,7 +22,7 @@ class MI_Dataset(Dataset):
         subject_id: int,
         runs: List[int],
         device: Union[str, torch.device] = "cpu",
-        return_subject_id: bool = False,
+        return_subject_number: bool = False,
         verbose: bool = False,
     ):
         """
@@ -39,7 +39,7 @@ class MI_Dataset(Dataset):
         self.subject_id = subject_id
         self.device = device
         self.runs = runs
-        self.return_subject_id = return_subject_id
+        self.return_subject_number = return_subject_number
         self.cfg = cfg
         self.parse_config()
 
@@ -52,8 +52,8 @@ class MI_Dataset(Dataset):
         self.format_data()
         self.set_device(self.device)
 
-        self.n_samples = self.X.shape[-1]
-        self.channels = self.X.shape[-2]
+        self.in_timesteps = self.X.shape[-1]
+        self.in_channels = self.X.shape[-2]
 
         if verbose:
             print("#" * 50)
@@ -63,8 +63,6 @@ class MI_Dataset(Dataset):
             print("#" * 50)
 
     def parse_config(self) -> None:
-
-
         self.target_freq = self.cfg["preprocessing"]["target_freq"]
         self.low_freq = self.cfg["preprocessing"]["low_freq"]
         self.high_freq = self.cfg["preprocessing"]["high_freq"]
@@ -82,10 +80,10 @@ class MI_Dataset(Dataset):
         )
         self.raw = mne.io.read_raw_gdf(subject_path, preload=True)
         self.filter_events()
-        eog_channels = [
+        eog_in_channels = [
             i for i, ch_name in enumerate(self.raw.ch_names) if "EOG" in ch_name
         ]
-        self.raw.drop_channels([self.raw.ch_names[ch_idx] for ch_idx in eog_channels])
+        self.raw.drop_channels([self.raw.ch_names[ch_idx] for ch_idx in eog_in_channels])
 
     def filter_events(self) -> None:
         events, _ = mne.events_from_annotations(self.raw)
@@ -138,7 +136,7 @@ class MI_Dataset(Dataset):
         self.X = scaler.fit_transform(self.X)
         self.X = self.X.reshape(orig_shape)
 
-    def split_by_runs(self) -> None:
+    def split_by_runs(self) -> None:    #Competion 2a specific
         X_by_runs = []
         y_by_runs = []
 
@@ -168,16 +166,16 @@ class MI_Dataset(Dataset):
         return len(self.X)
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
-        if self.return_subject_id:
+        if self.return_subject_number:
             subject_number = self.cfg['data']['subjects'].index(self.subject_id)
             return ((self.X[idx], torch.tensor(subject_number, dtype=torch.int64, device = self.device)), self.y[idx])
         else:
          return (self.X[idx],  self.y[idx])
 
     
-    def get_concat_dataset(cfg, split='train', return_subject_id = False, device = None, verbose = False):
+    def get_concat_dataset(cfg, split='train', return_subject_number = False, device = None, verbose = False):
         cache_root = 'cache'
-        if return_subject_id:
+        if return_subject_number:
             cache_type = 'all_subjects_with_id'
         else:
             cache_type = 'all_subjects'
@@ -185,10 +183,10 @@ class MI_Dataset(Dataset):
             subject_str =  "-".join(str(s) for s in cfg['data']['subjects'])
             cache_type = cache_type  + '_' + subject_str
             
-        def create_dataset(cfg, split='train', return_subject_id = False, device=None, verbose=False):
+        def create_dataset(cfg, split='train', return_subject_number = False, device=None, verbose=False):
             return ConcatDataset([
                 MI_Dataset(cfg, subject,cfg['data'][f'{split}_runs'][subject], 
-                                        return_subject_id=return_subject_id, device=device, verbose=verbose) 
+                                        return_subject_number=return_subject_number, device=device, verbose=verbose) 
                 for subject in cfg['data']['subjects']
             ])
 
@@ -198,7 +196,7 @@ class MI_Dataset(Dataset):
             dataset = pickle.load(open(path, 'rb'))
         else:
             print('Creating dataset...')
-            dataset = create_dataset(cfg, split=split, return_subject_id = return_subject_id, device=device, verbose=False)
+            dataset = create_dataset(cfg, split=split, return_subject_number = return_subject_number, device=device, verbose=False)
             for d in dataset.datasets:
                 d.set_device(device)
             os.makedirs(os.path.dirname(path), exist_ok=True)

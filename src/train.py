@@ -29,7 +29,7 @@ def calculate_loss(model, dataloader, loss_fnc):
             total_loss += loss.item()
     return total_loss / len(dataloader)  # average loss
 
-def train(model, train_dataloader, val_dataloader, cfg, verbose=True):
+def train(model, train_dataloader, val_dataloader, train_cfg, verbose=True, return_hist = True):
     set_seeds()
     loss_history = []
     val_loss_history = []
@@ -37,9 +37,9 @@ def train(model, train_dataloader, val_dataloader, cfg, verbose=True):
     val_acc_history = []
 
     loss_fnc = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=cfg['learning_rate'], weight_decay=cfg['weight_decay'])
+    optimizer = torch.optim.Adam(model.parameters(), lr=train_cfg['learning_rate'], weight_decay=train_cfg['weight_decay'])
 
-    for epoch in range(cfg["n_epochs"]):
+    for epoch in range(train_cfg["n_epochs"]):
         epoch_loss = 0.0
 
         for batch_features, batch_labels in train_dataloader:
@@ -66,7 +66,7 @@ def train(model, train_dataloader, val_dataloader, cfg, verbose=True):
             val_acc_history.append(val_accuracy)
             if verbose:
                 print(
-                    f"Epoch {epoch + 1}/{cfg['n_epochs']}, Loss: {epoch_loss:.5f}, Val Loss: {val_loss:.5f}, Train acc: {train_accuracy:.2f}%, Test acc: {val_accuracy:.2f}%"
+                    f"Epoch {epoch + 1}/{train_cfg['n_epochs']}, Loss: {epoch_loss:.5f}, Val Loss: {val_loss:.5f}, Train acc: {train_accuracy:.2f}%, Test acc: {val_accuracy:.2f}%"
                 )
 
     if verbose:
@@ -76,8 +76,10 @@ def train(model, train_dataloader, val_dataloader, cfg, verbose=True):
         print(f"Final train acc: {accuracy(model, train_dataloader):.2f}%")
         print(f"Final val acc: {accuracy(model, val_dataloader):.2f}%")
 
-    return loss_history, val_loss_history, train_acc_history, val_acc_history
-
+    if return_hist:
+        return loss_history, val_loss_history, train_acc_history, val_acc_history
+    else:
+        return accuracy(model, val_dataloader)
 
 def plot_metrics(train_losses, val_losses, train_accuracies, val_accuracies):
     # Create lists for the x-axis (epochs)

@@ -87,11 +87,11 @@ for subject_id in cfg_baseline['data']['subjects']:
 
 device =  torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-train_dataset = MI_Dataset.get_concat_dataset(cfg, split='train', return_subject_id = True, device=device, verbose=False)
+train_dataset = MI_Dataset.get_concat_dataset(cfg, split='train', return_subject_number = True, device=device, verbose=False)
 train_dataloader = DataLoader(train_dataset, batch_size=cfg['train']['batch_size'], shuffle=True)
 print(f"Train dataset: {len(train_dataset)} samples")
 
-test_dataset = MI_Dataset.get_concat_dataset(cfg, split='test', return_subject_id = True, device=device, verbose=False)
+test_dataset = MI_Dataset.get_concat_dataset(cfg, split='test', return_subject_number = True, device=device, verbose=False)
 test_dataloader = DataLoader(test_dataset, batch_size=cfg['train']['batch_size'], shuffle=False)
 print(f"Test dataset: {len(test_dataset)} samples")
 
@@ -101,15 +101,7 @@ print(f"Test dataset: {len(test_dataset)} samples")
 # Define the objective function to optimize
 def objective(trial, cfg):
     # Sample hyperparameters to optimize
-    cfg['model']['n_filters_time'] = trial.suggest_int('n_filters_time', 8, 32)
-    cfg['model']['filter_time_length'] = trial.suggest_int('filter_time_length', 5, 20)
-    cfg['model']['n_filters_spat'] = trial.suggest_int('n_filters_spat', 16, 64)
-    cfg['model']['dropout_rate'] = trial.suggest_float('dropout_rate', 0.0, 0.5)
-    cfg['model']['embedding_dim'] = trial.suggest_int('embedding_dim', 8, 32)
-    cfg['model']['n_filters3'] = trial.suggest_int('n_filters3', 32, 128)
-    cfg['train']['learning_rate'] = trial.suggest_float('learning_rate',  5e-4,1e-3)
-    cfg['train']['weight_decay'] = trial.suggest_float('weight_decay', 0.0, 0.3)
-    cfg['train']['n_epochs'] = trial.suggest_int('n_epochs', 1, 15)*10
+     cfg['train']['n_epochs'] = trial.suggest_int('n_epochs', 1, 15)*10
 
     # Create and train the model with the sampled hyperparameters
     model = ConditionedEEGNet.from_config(cfg['model'], subject_features, cfg["data"]["subjects"], device)

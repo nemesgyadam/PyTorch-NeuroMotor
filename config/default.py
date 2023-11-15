@@ -36,19 +36,29 @@ cfg = dict(
         tmax=5.9,
     ),
     model=dict(
-        n_subjects= 9,            # Number of subjects
-        in_chans= 22,               # Number of input channels
-        n_samples= 401,             # Number of samples
+        n_subjects= 9,              # Number of subjects
+
+        # EEGNet parameters
         n_classes= 4,               # Number of classes
-        n_filters_time= 25,         # Number of filters in the temporal convolution
-        norm_rate = 0.25,           # Normalization rate
-        filter_time_length= 10,     # Length of the temporal convolution filters
-        n_filters_spat = 25,        # Number of filters in the spatial convolution
+        in_channels= 22,            # Number of input channels
+        in_timesteps= 401,          # Number of input time steps
+       
+        n_time_filters= 25,         # Number of filters in the temporal convolution
+        time_filter_length= 10,     # Length of the temporal convolution filters
+        
+        n_depth_filters = 25,       # Number of filters in the depthwise convolution
+        
+        n_sep_filters= 64,          # Number of filters in the separable convolution layer
+        
         dropout_rate= 0.5,          # Dropout rate
-        depth_multiplier= 2,        # Depth multiplier for depthwise convolution
-        embedding_dim= 9,           # Dimension of the embedding for the attention mechanism
-        n_filters3= 64,             # Number of filters in the final convolution layer
-        weight_init_std= 0.2        # Standard deviation for weight initialization
+        weight_init_std= 0.2,       # Standard deviation for weight initialization
+        
+        # Concat EEGnet parameters
+        subject_filters = 16,       # Number of filters in the subject encoder
+        final_features = 4,         # Number of features after concatenation
+        
+        # Conditon parameters
+        embed_dim= 6,                # Dimension of the embedding for the attention mechanism
         ),
     train=dict(
         batch_size=64,
