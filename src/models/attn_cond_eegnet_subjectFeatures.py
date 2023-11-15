@@ -25,6 +25,8 @@ class ConditionedEEGNet(nn.Module):
         n_sep_filters: int = 32,
         dropout_rate: float = 0.5,
         weight_init_std: Optional[float] = None,
+        # SubjectEncoder params
+        subject_dim: int = 12,
         # Conditioning params
         embed_dim: int = 16,
         device: str = "cpu",
@@ -56,7 +58,7 @@ class ConditionedEEGNet(nn.Module):
         self.eeg_dim_reduction = nn.Linear(self.eeg_dim, self.embed_dim)
 
         """ Subject Encoder """
-        self.subject_dim = 12  # TODO: make this a parameter
+        self.subject_dim = subject_dim
         self.subject_encoder = nn.Linear(
             12, self.subject_dim
         )  # 12 is the number of features in the subject_features dict

@@ -25,6 +25,10 @@ class ConditionedEEGNet(nn.Module):
         n_sep_filters: int = 32,
         dropout_rate: float = 0.5,
         weight_init_std: Optional[float] = None,
+        # SubjectEncoder params
+        n_time_filters_subject: int = 2,
+        n_depth_filters_subject: int = 2,
+        n_sep_filters_subject: int = 2,
         # Conditioning params
         embed_dim: int = 16,
         device: str = "cpu",
@@ -61,10 +65,10 @@ class ConditionedEEGNet(nn.Module):
             n_classes=n_classes,
             in_channels=in_channels,
             in_timesteps=in_timesteps,
-            n_time_filters=2,  # TODO: make this a parameter
+            n_time_filters=n_time_filters_subject,
             time_filter_length=time_filter_length,
-            n_depth_filters=2,  # TODO: make this a parameter
-            n_sep_filters=2,  # TODO: make this a parameter
+            n_depth_filters=n_depth_filters_subject,
+            n_sep_filters=n_sep_filters_subject,
             dropout_rate=dropout_rate,
             weight_init_std=weight_init_std,
         )

@@ -52,13 +52,18 @@ cfg = dict(
         
         dropout_rate= 0.5,          # Dropout rate
         weight_init_std= 0.2,       # Standard deviation for weight initialization
+        # Subject Encoder params
+        n_time_filters_subject = 2, #(for attn_cond_eegnet_subjectFeatures) Number of filters in the temporal convolution
+        n_depth_filters_subject = 2,#(for attn_cond_eegnet_subjectFeatures) Number of filters in the depthwise convolution
+        n_sep_filters_subject = 2,  #(for attn_cond_eegnet_subjectFeatures) Number of filters in the separable convolution layer
+        subject_dim = 12,           #(for attn_cond_eegnet_subjectFeatures only) Number of features in the subject encoder
         
         # Concat EEGnet parameters
         subject_filters = 16,       # Number of filters in the subject encoder
         final_features = 4,         # Number of features after concatenation
         
         # Conditon parameters
-        embed_dim= 6,                # Dimension of the embedding for the attention mechanism
+        embed_dim= 6,               # Dimension of the embedding for the attention mechanism
         ),
     train=dict(
         batch_size=64,
